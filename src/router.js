@@ -2,20 +2,22 @@ module.exports = {
     routes: [
         {
             path: '/hello',
-            method: 'GET',
-            handler: function (callback) {
-                callback(200, {'hello': 'world'})
+            method: 'GET|POST',
+            handler: (callback) => {
+                callback(200, {'welcome': 'new visitor'})
             }
-        }
+        },
     ],
-    notFoundHandler: function (callback) {
+    notFoundHandler: (callback) => {
         callback(404);
     },
     matchRouteToHandler: function (requestInfo) {
         let handler = this.notFoundHandler;
 
         this.routes.forEach(function (route) {
-            if (route.method === requestInfo.method && route.path === requestInfo.path) {
+            let methods = route.method.split('|');
+
+            if (methods.indexOf(requestInfo.method) !== -1 && route.path === requestInfo.path) {
                 handler = route.handler;
             }
         });

@@ -1,36 +1,26 @@
-const http = require('http');
-const url  = require('url');
-const router = require('./router');
+const http          = require('http');
+const https         = require('https');
+const fs            = require('fs');
+const config        = require('./config');
+const serverHandler = require('./server-handler');
 
-const port = 3000;
+const httpsServerOptions = {
+    'key': fs.readFileSync('./src/https/key.pem'),
+    'cert': fs.readFileSync('./src/https/cert.pem')
+};
 
-let server = http.createServer(function (request, response) {
-    let parsedUrl = url.parse(request.url, true);
-    let path      = parsedUrl.pathname;
-
-    let requestInfo = {
-        method: request.method.toUpperCase(),
-        path: path.replace(/^\/+$/g, '')
-    };
-
-    let chosenHandler = router.matchRouteToHandler(requestInfo);
-
-    chosenHandler(function (statusCode, payload) {
-        payload = typeof (payload) === 'object' ? payload : {};
-
-        let payloadString = JSON.stringify(payload);
-
-        response.writeHead(statusCode);
-        response.end(payloadString);
-
-        console.log('Returning this response: ', statusCode, payloadString)
-    });
+const httpServer = http.createServer((request, response) => {
+    serverHandler(request, response);
 });
 
-server.listen(port, function () {
-    console.log(`The server is listening on port ${port}`);
+const httpsServer = https.createServer(httpsServerOptions, (request, response) => {
+    serverHandler(request, response);
 });
 
+httpServer.listen(config.httpPort, () => {
+    console.log(`The http server is listening on port ${config.httpPort}`);
+});
 
-
-
+httpsServer.listen(config.httpsPort, () => {
+    console.log(`The https server is listening on port ${config.httpsPort}`);
+});
